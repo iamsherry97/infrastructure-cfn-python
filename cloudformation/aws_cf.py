@@ -80,7 +80,7 @@ def vpc_module(conf,environment,templates):
     upload_files_to_bucket(environment,conf['BucketName'], dir_name.infra)
     print_separator()
     input_value = select_option_stacks(app)
-    
+
     if input_value == "1":
         identifier = conf["Identifier"]
         deploy_stack_priority_wise(conf)
@@ -461,11 +461,11 @@ def perform_jinja_templating(environment, app, conf):
             yaml_file.write(rendered_text)
 
     if 'VPC' in conf and os.path.exists(complete_jinja_template_path):
-        data_2 = {}
+        sg_data = {}
         subnet_data = {}
 
         if '_securitygroup' in conf['VPC']:
-            data_2['SecurityGroup']= conf['VPC']['_securitygroup']
+            sg_data['SecurityGroup']= conf['VPC']['_securitygroup']
         if '_subnets' in conf['VPC']:
             subnet_data['Subnets'] = conf['VPC']['_subnets']
 
@@ -473,7 +473,7 @@ def perform_jinja_templating(environment, app, conf):
         j2_env = Environment(loader=FileSystemLoader(THIS_DIR),
                          trim_blocks=True)
         rendered_text = j2_env.get_template(complete_jinja_template_path).render(
-                            data_2 = data_2,
+                            sg_data = sg_data,
                             subnet_data = subnet_data
                         )
         yaml_file_name = Path(jinja_template_file_name).stem + ".yml"
