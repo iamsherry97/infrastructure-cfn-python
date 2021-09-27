@@ -11,7 +11,7 @@ Resources:
   DogmaTaskDefRole: 
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${Identifier}-${Environment}-DogmaTaskDefinitionRole'
+      RoleName: !Sub '${Environment}-DogmaTaskDefinitionRole'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
