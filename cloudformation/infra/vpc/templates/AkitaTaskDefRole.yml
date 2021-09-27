@@ -11,7 +11,7 @@ Resources:
   TaskDefRole: 
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub Application-${AWS::StackName}
+      RoleName: !Sub '${Identifier}-${Environment}-TaskDefinitionRole'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:

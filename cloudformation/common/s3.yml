@@ -69,7 +69,30 @@ Parameters:
       - 'true'
       - 'false'
     Default: 'false'
-
+  BlockPublicAcls:
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'
+  BlockPublicPolicy:
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'     
+  IgnorePublicAcls:
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'   
+  RestrictPublicBuckets:
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'         
 Mappings: {}
                             #  Template Conditions  #
 Conditions:
@@ -93,7 +116,11 @@ Resources:
     Properties:
       BucketName: !Ref BucketName
       AccessControl: !Ref BucketAccessControl
-
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: !Ref BlockPublicAcls
+        BlockPublicPolicy: !Ref BlockPublicPolicy
+        IgnorePublicAcls: !Ref IgnorePublicAcls
+        RestrictPublicBuckets: !Ref RestrictPublicBuckets      
       LifecycleConfiguration:
         Rules:
           - Id: GlacierRule
@@ -103,11 +130,11 @@ Resources:
             Transitions:
               - TransitionInDays: !Ref GlacierLifeCycleTransitionInDays
                 StorageClass: Glacier
-
       VersioningConfiguration: !If
         - UseVersioning
         - Status: Enabled
         - !Ref 'AWS::NoValue'
+    DeletionPolicy: Retain
 
 
 

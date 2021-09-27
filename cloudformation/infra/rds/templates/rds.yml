@@ -143,23 +143,10 @@ Conditions:
     - !Equals
       - !Ref 'DBSnapshotName'
       - ''
-  # CreateProdResources: !Equals 
-  #   - !Ref DatabaseEngine
-  #   - aurora
 
 
                 # Resources CFN #
 Resources:
-  # DatabaseSecurityGroup:
-  #   Type: 'AWS::EC2::SecurityGroup'
-  #   Properties:
-  #     GroupDescription: !Ref 'AWS::StackName'
-  #     VpcId: !Ref VPCId
-  #     SecurityGroupIngress:
-  #     - IpProtocol: tcp
-  #       FromPort: 5432
-  #       ToPort: 5432
-  #       CidrIp: 10.0.0.0/16
 
 
   DBSubnetGroup:
@@ -210,85 +197,7 @@ Resources:
         - !Ref 'AWS::NoValue'      
       Tags:
         - Key: Name
-          Value: !Join [ '', [ 'Postgress- ', !Ref 'AWS::StackName' ] ]      
+          Value: !Sub '${Identifier}-${Environment}-RDS'   
       UseDefaultProcessorFeatures: !Ref UseDefaultProcessorFeatures
       VPCSecurityGroups:
       - !Ref DatabaseSecurityGroup
-
-################
-# Aurora Cluster
-################
-
-  # RDSCluster: 
-  #   Type: "AWS::RDS::DBCluster"  
-  #   Properties: 
-  #     BackupRetentionPeriod: 30
-  #     DatabaseName: !Ref DatabaseName
-  #     DBClusterParameterGroupName: 
-  #       Ref: RDSDBClusterParameterGroup
-  #     Port: 3306  
-  #     DBSubnetGroupName: !Ref rdsDBSubnetGroup
-  #     Engine: aurora
-  #     EngineMode: serverless
-  #     MasterUserPassword: 
-  #       Ref: DatabaseMasterPassword
-  #     MasterUsername: 
-  #       Ref: DatabaseMasterUsername
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Join [ '', [ 'Aurora- ', !Ref 'AWS::StackName' ] ]        
-  #     VpcSecurityGroupIds:
-  #     - !Ref DatabaseSecurityGroup
-      
-
-  # RDSDBClusterParameterGroup: 
-  #   Properties: 
-  #     Description: "CloudFormation Sample Aurora Cluster Parameter Group"
-  #     Family: aurora5.6
-  #     Parameters: 
-  #       time_zone: US/Eastern
-  #   Type: "AWS::RDS::DBClusterParameterGroup"
-
-
-  # RDSDBInstance1: 
-  #   Type: "AWS::RDS::DBInstance"  
-  #   Properties: 
-  #     AvailabilityZone: us-east-1c
-  #     DBClusterIdentifier: 
-  #       Ref: RDSCluster
-  #     DBInstanceClass: !Ref DatabaseInstanceType
-  #     DBParameterGroupName: 
-  #       Ref: RDSDBParameterGroup
-  #     DBSubnetGroupName: !Ref rdsDBSubnetGroup
-  #     Engine: aurora
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Join [ '', [ 'Aurora- ', !Ref 'AWS::StackName' ] ]
-      
-
-
-# Outputs:
-#  TemplateID:
-#    Description: 'cloudonaut.io template id.'
-#    Value: 'state/rds-postgres'
-#   TemplateVersion:
-#     Description: 'cloudonaut.io template version.'
-#     Value: '__VERSION__'
-#   StackName:
-#     Description: 'Stack name.'
-#     Value: !Sub '${AWS::StackName}'
-#   InstanceName:
-#     Description: 'The name of the database instance.'
-#     Value: !Ref DBInstance
-#     Export:
-#       Name: !Sub '${AWS::StackName}-InstanceName'
-#   DNSName:
-#     Description: 'The connection endpoint for the database.'
-#     Value: !GetAtt 'DBInstance.Endpoint.Address'
-#     Export:
-#       Name: !Sub '${AWS::StackName}-DNSName'
-#   SecurityGroupId:
-#     Description: 'The security group used to manage access to RDS Postgres.'
-#     Value: !Ref DatabaseSecurityGroup
-#     Export:
-#       Name: !Sub '${AWS::StackName}-SecurityGroupId'

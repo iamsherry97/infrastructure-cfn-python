@@ -11,7 +11,7 @@ Resources:
   TaskDefRole: 
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub Dogma-${AWS::StackName}
+      RoleName: !Sub '${Identifier}-${Environment}-TaskDefinitionRole'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -25,7 +25,7 @@ Resources:
       Path: /
       Policies:
         - 
-          PolicyName: !Sub Dogma-${AWS::StackName}-Policy
+          PolicyName: !Sub '${Identifier}-${Environment}-TaskDefinitionPolicy'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
