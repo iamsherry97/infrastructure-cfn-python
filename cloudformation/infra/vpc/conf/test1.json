@@ -21,18 +21,33 @@
         "CidrBlockForPriS1": "10.0.3.0/24",
         "CidrBlockForPriS2": "10.0.4.0/24",
         "_subnets" : [{
-            "ResourceName": "TestSubnet",
+            "ResourceName": "PublicSubnet1",
             "CidrBlock": "CidrBlockForPubS1",
-            "AvailabilityZone": "us-west-2c",
+            "AvailabilityZone": "us-west-2a",
+            "MapPublicIpOnLaunch": "True",
             "RouteAssociation": "Public"
         },
         {
-        "ResourceName": "Test02Subnet",
+        "ResourceName": "PublicSubnet2",
+        "CidrBlock": "CidrBlockForPubS2",
+        "AvailabilityZone": "us-west-2b",
+        "MapPublicIpOnLaunch": "True",
+        "RouteAssociation": "Private"
+        },
+        {
+        "ResourceName": "PrivateSubnet1",
         "CidrBlock": "CidrBlockForPriS1",
         "AvailabilityZone": "us-west-2a",
+        "MapPublicIpOnLaunch": "False",
         "RouteAssociation": "Private"
-        }
-        
+        },
+        {
+            "ResourceName": "PrivateSubnet2",
+            "CidrBlock": "CidrBlockForPriS2",
+            "AvailabilityZone": "us-west-2b",
+            "MapPublicIpOnLaunch": "False",
+            "RouteAssociation": "Private"
+            }
         ],
         "_securitygroup": [{
             "ResourceName": "SecurityGroup01",

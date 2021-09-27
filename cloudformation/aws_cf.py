@@ -75,23 +75,17 @@ def print_environments(app):
     print("You have selected: " + env_data)
     return env_data
 
-
 def vpc_module(conf,environment,templates):
     print("Uploading templates, Please wait ...")
-    if app == "vpc":
-        # check_dir_ = True
-        upload_files_to_bucket(environment,conf['BucketName'], dir_name.infra)
+    upload_files_to_bucket(environment,conf['BucketName'], dir_name.infra)
     print_separator()
     input_value = select_option_stacks(app)
+    
     if input_value == "1":
         identifier = conf["Identifier"]
         deploy_stack_priority_wise(conf)
         for i in range(len(templates)):
             print(print_vpc_output(identifier, templates[i]))
-
-        
-        # print(print_vpc_output(identifier, templates[1]))
-        # print(print_vpc_output(identifier, templates[2]))
 
     elif input_value == "2":
         delete_stack_priority_wise(conf)
@@ -109,39 +103,14 @@ def vpc_module(conf,environment,templates):
                 print("\n")
                 print_vpc_output(identifier, templates[i])
             else:
-                print("\nNo Template found!\n")
-        # stack1 = "%s-%s-%s" % (identifier, environment, templates[0])
-        # stack2 = "%s-%s-%s" % (identifier, environment, templates[1])
-        # stack3 = "%s-%s-%s" % (identifier, environment, templates[2])  
-        # cloudformation_client = boto3.client('cloudformation', region_name=region)
-        # stack_check1 = does_stack_exist(stack1, cloudformation_client)
-        # if (stack_check1 != None ):
-        #     print("\n")
-        #     print_vpc_output(identifier, templates[0])
-        # else:
-        #     print("\nNo TaskDefinition template found!\n")
-        # cloudformation_client = boto3.client('cloudformation', region_name=region)
-        # stack_check2 = does_stack_exist(stack2, cloudformation_client)
-        # if (stack_check2 != None ):
-        #     print("\n")
-        #     print_vpc_output(identifier,templates[1])
-        # else:
-        #     print("\nNo VPC template found!\n")
-        # cloudformation_client = boto3.client('cloudformation', region_name=region)
-        # stack_check2 = does_stack_exist(stack3, cloudformation_client)
-        # if (stack_check2 != None ):
-        #     print("\n")
-        #     print_vpc_output(identifier,templates[2])
-        # else:
-        #     print("\nNo VPC template found!\n")       
-        
+                print("\nNo Template found!\n")    
+
     else :
         print("Vpc creation skipped")
         print_separator()
 
 
 def apps_module(conf,environment,templates):
-        # check_dir_ = False
         print("Uploading templates, Please wait ...")
         upload_files_to_bucket(environment,conf['BucketName'], dir_name.apps) 
         print("\n")
@@ -182,20 +151,11 @@ def apps_module(conf,environment,templates):
 
 def rds_module(conf,environment,templates):
         print("Uploading templates, Please wait ...")
-        if app == "rds":
-            # check_dir_ = True
-            upload_files_to_bucket(environment,conf['BucketName'], dir_name.infra)
-            print("\n")
-        else:
-            print("Wrong input. Please try again!")
-            #break
+        upload_files_to_bucket(environment,conf['BucketName'], dir_name.infra)
+        print("\n")
         input_value = select_option_stacks(app)   
-        # print("\n1. Do you want to update/create the stack")
-        # print("2. Do you want to delete the stack")
-        # print("\nOR Press any key to skip this step..")
-        # selected_input_index = input("\nHow do you want to proceed: ")
         if input_value == "1":
-            print("\nPlease specify snapshot-ID to create RDS from snapshot/DBName to create RDS from scratch ")
+            print("\nMake sure to specify snapshot-ID to create RDS from snapshot OR DBName to create RDS from scratch ")
             waiting=input("\nPress any key to continue. . .")
             template = templates[0]
             identifier = conf["Identifier"]
@@ -243,8 +203,6 @@ def delete_stack_by_checking_dependency(template, conf):
 
     if not is_higher_priority_stack_exists:
         delete(template)
-
-
 
 def delete(template):
     """ destroy the cloudformation templates to an environment"""
@@ -522,9 +480,5 @@ def perform_jinja_templating(environment, app, conf):
         with open(jinja_template_path + yaml_file_name, "w") as yaml_file:
             yaml_file.write(rendered_text)
         
-
-
-
-
 if __name__ == '__main__':
     main()

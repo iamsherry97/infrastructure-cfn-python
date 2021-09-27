@@ -76,7 +76,7 @@ Resources:
                 Effect: Allow
 
 Outputs:
-  AkitaTaskDefinitionRole:
+  DogmaTaskDefinitionRole:
     Description: The name of the Taskdefinition Role.
     Value: !GetAtt TaskDefRole.Arn                
   

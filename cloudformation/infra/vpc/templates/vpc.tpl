@@ -42,7 +42,7 @@ Resources:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref MyVpc
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: {{subnet_data['Subnets'][i]['MapPublicIpOnLaunch']}}
       CidrBlock: !Ref {{subnet_data['Subnets'][i]['CidrBlock']}}
       AvailabilityZone: {{subnet_data['Subnets'][i]['AvailabilityZone']}}
       Tags:
@@ -53,26 +53,6 @@ Resources:
 
 {%endif%}
 
-  MyPublicSubnet2:
-    Type: 'AWS::EC2::Subnet'
-    Properties:
-      VpcId: !Ref MyVpc
-      MapPublicIpOnLaunch: true
-      CidrBlock: !Ref CidrBlockForPubS2
-      AvailabilityZone: us-west-2b
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}'
-
-  MyPrivateSubnet2:
-    Type: 'AWS::EC2::Subnet'
-    Properties:
-      VpcId: !Ref MyVpc
-      CidrBlock: !Ref CidrBlockForPriS2
-      AvailabilityZone: us-west-2b
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}'
   MyIGW:
     Type: 'AWS::EC2::InternetGateway'
     Properties:
@@ -94,7 +74,7 @@ Resources:
   MyNatGat:
     Type: 'AWS::EC2::NatGateway'
     Properties:
-      SubnetId: !Ref MyPublicSubnet2
+      SubnetId: !Ref PublicSubnet1
       AllocationId: !GetAtt MyNATEIP.AllocationId
       Tags:
         - Key: Name
@@ -118,7 +98,7 @@ Resources:
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref MyIGW
-      RouteTableId: !Ref MyPublicRouteTable
+      RouteTableId: !Ref PublicSubnet1
   PriSubnetToNat:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -141,18 +121,6 @@ Resources:
 {% endfor %}
 
 {% endif %}
-
-  PubSubnet2Asso:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
-    Properties:
-      RouteTableId: !Ref MyPublicRouteTable
-      SubnetId: !Ref MyPublicSubnet2
-
-  PriSubnet2Asso:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
-    Properties:
-      RouteTableId: !Ref MyPrivateRouteTable
-      SubnetId: !Ref MyPrivateSubnet2
 
 {% if 'SecurityGroup' in data_2 %}
 {% for i in range(data_2['SecurityGroup'] | length) %}
@@ -190,6 +158,10 @@ Outputs:
   VPC:
     Description: VPC ID
     Value: !Ref MyVpc
+{% for i in range(subnet_data['Subnets'] | length) %}
+  {{ subnet_data['Subnets'][i]['ResourceName'] }}:
+    Value: !Ref {{ subnet_data['Subnets'][i]['ResourceName'] }}
+{%endfor%}
   PublicSubnet2:
     Description: Public Subnet 2 ID
     Value: !Ref MyPublicSubnet2
