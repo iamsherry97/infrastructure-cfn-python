@@ -1,0 +1,111 @@
+{
+  "Stacks": [
+    {
+      "StackId": "arn:aws:cloudformation:us-west-2:489994096722:stack/Dogma-test1-VPC/bc7be020-17e4-11ec-8a01-067f1c56f22b",
+      "StackName": "Dogma-test1-VPC",
+      "Description": "Template for the creation of new vpc,subnets,igw,nat,route table, routes etc\n",
+      "Parameters": [
+        {
+          "ParameterKey": "Identifier",
+          "ParameterValue": "Dogma"
+        },
+        {
+          "ParameterKey": "VpcCidrBlock",
+          "ParameterValue": "10.0.0.0/16"
+        },
+        {
+          "ParameterKey": "CidrBlockForPriS1",
+          "ParameterValue": "10.0.3.0/24"
+        },
+        {
+          "ParameterKey": "CidrBlockForPriS2",
+          "ParameterValue": "10.0.4.0/24"
+        },
+        {
+          "ParameterKey": "Environment",
+          "ParameterValue": "test1"
+        },
+        {
+          "ParameterKey": "CidrBlockForPubS1",
+          "ParameterValue": "10.0.1.0/24"
+        },
+        {
+          "ParameterKey": "CidrBlockForPubS2",
+          "ParameterValue": "10.0.2.0/24"
+        }
+      ],
+      "CreationTime": "2021-09-17T18:26:12.592Z",
+      "RollbackConfiguration": {
+        
+      },
+      "StackStatus": "CREATE_COMPLETE",
+      "DisableRollback": True,
+      "NotificationARNs": [
+        
+      ],
+      "Capabilities": [
+        "CAPABILITY_IAM",
+        "CAPABILITY_NAMED_IAM"
+      ],
+      "Outputs": [
+        {
+          "OutputKey": "SG02",
+          "OutputValue": "sg-040432ebe9a0f2702",
+          "Description": "SG for EC2"
+        },
+        {
+          "OutputKey": "PrivateSubnet1",
+          "OutputValue": "subnet-04938c2babb3ad909",
+          "Description": "Private Subnet 1 ID"
+        },
+        {
+          "OutputKey": "SG03",
+          "OutputValue": "sg-0f1a484ba13112a3b",
+          "Description": "SG forMySQL"
+        },
+        {
+          "OutputKey": "PrivateSubnet2",
+          "OutputValue": "subnet-0c62fdec2dda60956",
+          "Description": "Private Subnet 2 ID"
+        },
+        {
+          "OutputKey": "SG01",
+          "OutputValue": "sg-0bc577acbb0402f55",
+          "Description": "SG for ALB"
+        },
+        {
+          "OutputKey": "PublicSubnetList",
+          "OutputValue": "subnet-0ed914e3b322d2ec3,subnet-03ecc72361933284f",
+          "Description": "List of Public Subnets"
+        },
+        {
+          "OutputKey": "PrivateSubnetList",
+          "OutputValue": "subnet-04938c2babb3ad909,subnet-0c62fdec2dda60956",
+          "Description": "List of Public Subnets"
+        },
+        {
+          "OutputKey": "VPC",
+          "OutputValue": "vpc-0d9d7ab0d4177efe8",
+          "Description": "VPC ID"
+        },
+        {
+          "OutputKey": "PublicSubnet2",
+          "OutputValue": "subnet-03ecc72361933284f",
+          "Description": "Public Subnet 2 ID"
+        },
+        {
+          "OutputKey": "PublicSubnet1",
+          "OutputValue": "subnet-0ed914e3b322d2ec3",
+          "Description": "Public Subnet 1 ID"
+        }
+      ],
+      "Tags": [
+        
+      ],
+      "EnableTerminationProtection": False,
+      "DriftInformation": {
+        "StackDriftStatus": "NOT_CHECKED"
+      }
+    }
+  ]
+}

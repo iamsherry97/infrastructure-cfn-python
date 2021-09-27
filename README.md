@@ -1,2 +1,2 @@
-# infrastructure-cfn-python
-This repository contains python-app based cloudformation infrastructure deployment on AWS
+# infrastructure
+This is a place to store infrastructure configurations, such as cloudformation templates.

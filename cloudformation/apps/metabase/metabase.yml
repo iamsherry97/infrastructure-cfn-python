@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: "cf-templates-1mhd4gm8nbj46-us-west-2"
+  Environment:
+    Type: String
+    Default: prod
+  Identifier:
+    Type: String
+    Default: metabase
+  VPCId:
+      Type: String
+      Default: "vpc-bc9b15d7" # default VPC
+  SecurityGroups:
+      Type: String
+      Default: "sg-06f996f3d5ac3c6e8,sg-0a659065,sg-0c6ecfe101d721ef6,sg-48149e2f"
+  Subdomain:
+      Type: String
+      Default: metabase
+
+Resources:
+    PrivateALB:
+        Type: AWS::CloudFormation::Stack
+        Properties: 
+          TemplateURL: !Sub "https://${BucketName}.s3-${AWS::Region}.amazonaws.com/${Identifier}/${Environment}/common/alb.yml"
+          TimeoutInMinutes: 60
+          Parameters:
+            Environment: !Ref Environment
+            Identifier: !Ref Identifier
+            VPCId: !Ref VPCId
+            SecurityGroups: !Ref SecurityGroups
+            Subnets: "subnet-03b1dbdc65580b33d,subnet-029d78277c38ae8e2"
+            Scheme: "internal"
+            GroupIdentifier: "private"
+
+    PublicALB: 
+        Type: AWS::CloudFormation::Stack
+        Properties: 
+          TemplateURL: !Sub "https://${BucketName}.s3-${AWS::Region}.amazonaws.com/${Identifier}/${Environment}/common/alb.yml"
+          TimeoutInMinutes: 60
+          Parameters:
+            Environment: !Ref Environment
+            Identifier: !Ref Identifier
+            VPCId: !Ref VPCId
+            SecurityGroups: !Ref SecurityGroups
+            Subnets: "subnet-b19b15da,subnet-b29b15d9,subnet-b39b15d8"
+            Scheme: "internet-facing"
+            GroupIdentifier: "public"
+    
+    PublicRoute53: 
+        Type: AWS::CloudFormation::Stack
+        Properties: 
+          TemplateURL: !Sub "https://${BucketName}.s3-${AWS::Region}.amazonaws.com/${Identifier}/${Environment}/common/route53.yml"
+          TimeoutInMinutes: 60
+          Parameters:
+            Environment: !Ref Environment
+            Identifier: !Ref Identifier
+            HostName: !Sub "${Subdomain}.wholebiome.com"
+            HostedZoneId: "Z1L31BET9POS2B"
+            GroupIdentifier: "public"
+            DNSName: !GetAtt PublicALB.Outputs.LoadBalancerUrl
+            CanonicalHostedZoneID: !GetAtt PublicALB.Outputs.LoadBalancerZone
+
+    PrivateRoute53:
+        Type: AWS::CloudFormation::Stack
+        Properties: 
+          TemplateURL: !Sub "https://${BucketName}.s3-${AWS::Region}.amazonaws.com/${Identifier}/${Environment}/common/route53.yml"
+          TimeoutInMinutes: 60
+          Parameters:
+            Environment: !Ref Environment
+            Identifier: !Ref Identifier
+            HostName: !Sub "${Subdomain}.wholebiome.com"
+            HostedZoneId: "Z1K5AT2QML6HZ6"
+            GroupIdentifier: "private"
+            DNSName: !GetAtt PrivateALB.Outputs.LoadBalancerUrl
+            CanonicalHostedZoneID: !GetAtt PrivateALB.Outputs.LoadBalancerZone
+    
+    ECS: 
+        Type: AWS::CloudFormation::Stack
+        Properties: 
+          TemplateURL: !Sub "https://${BucketName}.s3-${AWS::Region}.amazonaws.com/${Identifier}/${Environment}/common/ecs.yml"
+          Parameters:
+            Environment: !Ref Environment
+            Identifier: !Ref Identifier
+
+    RDS: 
+      Type: AWS::CloudFormation::Stack
+      Properties: 
+        TemplateURL: !Sub "https://${BucketName}.s3-${AWS::Region}.amazonaws.com/${Identifier}/${Environment}/common/rds.yml"
+        Parameters:
+          Environment: !Ref Environment
+          Identifier: !Ref Identifier
+          DatabaseName: metabase
+          MasterUsername: metabase
+          MasterUserPassword: !Sub "/metabase/${Environment}/db/password"
+          VpcSecurityGroupIds: !Ref SecurityGroups
+          PauseWhenInactive: true
+
+    Role:
+      Type: AWS::IAM::Role
+      Properties: 
+        RoleName: !Sub "${Identifier}-${Environment}-service-role"
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement: 
+            - 
+              Effect: "Allow"
+              Principal: 
+                Service: 
+                  - "ecs-tasks.amazonaws.com"
+              Action: 
+                - "sts:AssumeRole"
+        Description: "The role assumed by the metabase service"
+
+    Policies: 
+      Type: "AWS::IAM::Policy"
+      Properties: 
+        PolicyName: !Sub "${Identifier}-${Environment}-service-permissions"
+        PolicyDocument: 
+          Version: "2012-10-17"
+          Statement: 
+            - 
+              Effect: "Allow"
+              Action: 
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+                - "logs:DescribeLogStreams"
+              Resource: "*"
+            - Action: "ssm:DescribeParameters"
+              Resource: "*"
+              Effect: "Allow"
+            - Action: 
+                - "ssm:GetParameters"
+                - "ssm:GetParametersByPath"
+                - "ssm:GetParameter"
+              Resource: "arn:aws:ssm:us-west-2:329245541944:parameter/metabase/*"
+              Effect: "Allow"
+        Roles: 
+          - !Ref Role
+
+    Service: 
+      Type: AWS::CloudFormation::Stack
+      Properties: 
+        TemplateURL: !Sub "https://${BucketName}.s3-${AWS::Region}.amazonaws.com/${Identifier}/${Environment}/templates/fargate.yml"
+        Parameters:
+          Environment: !Ref Environment
+          Identifier: !Ref Identifier
+          EcsCluster: !GetAtt ECS.Outputs.EcsCluster
+          Tag: "v0.39.1"
+          ContainerPort: "3000"
+          CertificateARN: "arn:aws:acm:us-west-2:329245541944:certificate/28a0bd7d-54c1-410d-89d8-34375c926f5e"
+          Path: "/"
+          ContainerName: "metabase"
+          ServiceName: "metabase"
+          AppName: "metabase"
+          ImageURI: "metabase/metabase"
+          TaskRoleARN: !GetAtt Role.Arn
+          BucketName: !Ref BucketName
+          VPCId: !Ref VPCId
+          PrivateLoadBalancerArn: !GetAtt PrivateALB.Outputs.LoadBalancerArn
+          PublicLoadBalancerArn: !GetAtt PublicALB.Outputs.LoadBalancerArn
+          PublicRoute53GroupIdentifier: "public"
+          Subnets: "subnet-029d78277c38ae8e2,subnet-03b1dbdc65580b33d"
+          SecurityGroups: !Ref SecurityGroups
+          Priority: "12"
+          DesiredCount: "1"
+          CPUUnits: "2048"
+          MemoryUnits: "4096"
+          DBHost: !GetAtt RDS.Outputs.Host
+          DBPasswordParameterArn: "arn:aws:ssm:us-west-2:329245541944:parameter/metabase/prod/db/password"

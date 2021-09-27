@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+  ServiceName:
+    Type: String
+  ContainerPort:
+    Type: String
+  ImageURI:
+    Type: String
+  Tag:
+    Type: String
+    Default: latest
+  CPUUnits:
+    Type: String
+    Default: 1024
+  MemoryUnits:
+    Type: String
+    Default: 2048
+  TaskRoleARN:
+    Type: String
+  PublicRoute53GroupIdentifier:
+    Type: String
+  DBHost:
+    Type: String
+  DBPasswordParameterArn:
+    Type: String
+  DBPort:
+    Type: Number
+    Default: 5432
+  DBName:
+    Type: String
+    Default: metabase
+  DBUser:
+    Type: String
+    Default: metabase
+  DBEngineType:
+    Type: String
+    Default: postgres
+    AllowedValues: [postgres, mysql, h2]
+
+Outputs:
+  TaskDefinition:
+    Value: !Ref TaskDefinition
+
+Resources:
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${Identifier}-${Environment}
+      TaskRoleArn: !Ref TaskRoleARN
+      ExecutionRoleArn: !Ref TaskRoleARN
+      Cpu: !Ref CPUUnits
+      Memory: !Ref MemoryUnits
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: !Ref ServiceName
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+          Image: !Sub ${ImageURI}:${Tag}
+          Secrets:
+            - Name: MB_DB_PASS
+              ValueFrom: !Ref DBPasswordParameterArn
+          Environment:
+            - Name: AWS_DEFAULT_REGION
+              Value: !Ref AWS::Region
+            - Name: "MB_DB_DBNAME"
+              Value: !Ref DBName
+            - Name: MB_DB_PORT
+              Value: !Ref DBPort
+            - Name: MB_DB_USER
+              Value: !Ref DBUser
+            - Name: "MB_DB_TYPE"
+              Value: !Ref DBEngineType
+            - Name: MB_DB_HOST
+              Value: !Ref DBHost
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub "${Identifier}-${Environment}"
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Sub "${Identifier}-${Environment}"

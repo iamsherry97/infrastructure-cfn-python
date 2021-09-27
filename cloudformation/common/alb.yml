@@ -1,0 +1,53 @@
+Description:
+  Load Balancer, Listeners and default rules
+
+Parameters:
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+  VPCId:
+    Type: String
+  Subnets:
+    Type: String
+  SecurityGroups:
+    Type: String
+  Scheme:
+    Type: String
+  GroupIdentifier:
+    Type: String
+
+Resources:
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub ${Identifier}-${Environment}-ALB-${GroupIdentifier}
+      Scheme: !Ref Scheme
+      Subnets:
+        Fn::Split:
+          - ","
+          - !Ref Subnets
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: 4000
+      SecurityGroups:
+        Fn::Split:
+            - ","
+            - !Ref SecurityGroups
+      Tags:
+        - Key: Env
+          Value: !Ref Environment
+
+Outputs:
+  LoadBalancerArn:
+    Value: !Ref LoadBalancer
+    Export:
+      Name: !Sub "${Identifier}-${Environment}-LoadBalancerArn-${GroupIdentifier}"
+  LoadBalancerZone:
+    Value: !GetAtt LoadBalancer.CanonicalHostedZoneID
+    Export:
+      Name: !Sub "${Identifier}-${Environment}-CanonicalHostedZoneID-${GroupIdentifier}"
+  LoadBalancerUrl:
+    Value: !GetAtt LoadBalancer.DNSName
+    Export:
+      Name: !Sub "${Identifier}-${Environment}-LoadBalancerDNS-${GroupIdentifier}"

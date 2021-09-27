@@ -1,0 +1,60 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Aurora serverless cluster
+
+Parameters:
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+  DatabaseName:
+    Type: String
+  EngineVersion:
+    Type: String
+    Default: '10.14'
+  MasterUsername:
+    Type: String
+    Default: postgres
+  MasterUserPassword:
+    Type: "AWS::SSM::Parameter::Value<String>"
+  VpcSecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  PauseWhenInactive:
+    Type: String
+    Default: false
+    AllowedValues: [true, false]
+
+Conditions:
+  PauseDbWhenInactive: !Equals [true, !Ref PauseWhenInactive]
+
+Resources:
+  Cluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      Engine: aurora-postgresql
+      EngineMode: serverless
+      EngineVersion: !Ref EngineVersion
+      DatabaseName: !Ref DatabaseName
+      MasterUsername: !Ref MasterUsername
+      MasterUserPassword: !Ref MasterUserPassword
+      DBClusterIdentifier: !Sub "${Identifier}-${Environment}"
+      BackupRetentionPeriod: 7
+      DeletionProtection: true
+      VpcSecurityGroupIds: !Ref VpcSecurityGroupIds
+      Tags:
+        - Key: Env
+          Value: !Ref Environment
+      ScalingConfiguration:
+        AutoPause:
+          !If [PauseDbWhenInactive, true, false]
+        MaxCapacity: 32
+        MinCapacity: 2
+        SecondsUntilAutoPause: 300
+
+Outputs:
+  Host:
+    Value: !GetAtt Cluster.Endpoint.Address
+    Export:
+      Name: !Sub "${Identifier}-${Environment}-DbHost"
+
