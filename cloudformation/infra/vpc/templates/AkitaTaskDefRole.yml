@@ -8,10 +8,10 @@ Parameters:
     Type: String
     
 Resources:
-  TaskDefRole: 
+  AkitaTaskDefRole: 
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${Identifier}-${Environment}-TaskDefinitionRole'
+      RoleName: !Sub '${Environment}-AkitaTaskdefinitionRole'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -36,4 +36,4 @@ Resources:
 Outputs:
   AkitaTaskDefinitionRole:
     Description: The name of the Taskdefinition Role.
-    Value: !GetAtt TaskDefRole.Arn         
+    Value: !GetAtt AkitaTaskDefRole.Arn         

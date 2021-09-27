@@ -8,10 +8,10 @@ Parameters:
     Type: String
     
 Resources:
-  TaskDefRole: 
+  DogmaTaskDefRole: 
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${Identifier}-${Environment}-TaskDefinitionRole'
+      RoleName: !Sub '${Identifier}-${Environment}-DogmaTaskDefinitionRole'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -25,7 +25,7 @@ Resources:
       Path: /
       Policies:
         - 
-          PolicyName: !Sub '${Identifier}-${Environment}-TaskDefinitionPolicy'
+          PolicyName: !Sub '${Environment}-DogmaTaskDefinitionPolicy'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -78,5 +78,5 @@ Resources:
 Outputs:
   DogmaTaskDefinitionRole:
     Description: The name of the Taskdefinition Role.
-    Value: !GetAtt TaskDefRole.Arn                
+    Value: !GetAtt DogmaTaskDefRole.Arn                
   

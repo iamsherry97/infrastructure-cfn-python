@@ -28,18 +28,18 @@
             "RouteAssociation": "Public"
         },
         {
-        "ResourceName": "PublicSubnet2",
-        "CidrBlock": "CidrBlockForPubS2",
-        "AvailabilityZone": "us-west-2b",
-        "MapPublicIpOnLaunch": "True",
-        "RouteAssociation": "Private"
+            "ResourceName": "PublicSubnet2",
+            "CidrBlock": "CidrBlockForPubS2",
+            "AvailabilityZone": "us-west-2b",
+            "MapPublicIpOnLaunch": "True",
+            "RouteAssociation": "Public"
         },
         {
-        "ResourceName": "PrivateSubnet1",
-        "CidrBlock": "CidrBlockForPriS1",
-        "AvailabilityZone": "us-west-2a",
-        "MapPublicIpOnLaunch": "False",
-        "RouteAssociation": "Private"
+            "ResourceName": "PrivateSubnet1",
+            "CidrBlock": "CidrBlockForPriS1",
+            "AvailabilityZone": "us-west-2a",
+            "MapPublicIpOnLaunch": "False",
+            "RouteAssociation": "Private"
         },
         {
             "ResourceName": "PrivateSubnet2",
@@ -47,8 +47,9 @@
             "AvailabilityZone": "us-west-2b",
             "MapPublicIpOnLaunch": "False",
             "RouteAssociation": "Private"
-            }
+    }
         ],
+
         "_securitygroup": [{
             "ResourceName": "SecurityGroup01",
             "GroupDescription": "This is the description of group",

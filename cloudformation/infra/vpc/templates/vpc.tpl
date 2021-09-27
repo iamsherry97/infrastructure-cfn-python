@@ -98,7 +98,7 @@ Resources:
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref MyIGW
-      RouteTableId: !Ref PublicSubnet1
+      RouteTableId: !Ref MyPublicRouteTable
   PriSubnetToNat:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -162,12 +162,6 @@ Outputs:
   {{ subnet_data['Subnets'][i]['ResourceName'] }}:
     Value: !Ref {{ subnet_data['Subnets'][i]['ResourceName'] }}
 {%endfor%}
-  PublicSubnet2:
-    Description: Public Subnet 2 ID
-    Value: !Ref MyPublicSubnet2
-  PrivateSubnet2:
-    Description: Private Subnet 2 ID
-    Value: !Ref MyPrivateSubnet2
 {% for i in range(data_2['SecurityGroup'] | length) %}
   {{ data_2['SecurityGroup'][i]['ResourceName'] }}:
     Description: '{{ data_2['SecurityGroup'][i]['GroupDescription'] }}'
