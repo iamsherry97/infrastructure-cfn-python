@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ECS Task Definition Role
+
+Parameters:
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+    
+Resources:
+  AkitaTaskDefRole: 
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Environment}-AkitaTaskdefinitionRole'
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+        - "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        - "arn:aws:iam::aws:policy/AWSBatchFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
+        - "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+        - "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+
+Outputs:
+  AkitaTaskDefinitionRole:
+    Description: The name of the Taskdefinition Role.
+    Value: !GetAtt AkitaTaskDefRole.Arn         

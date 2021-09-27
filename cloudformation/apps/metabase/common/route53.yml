@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  HostName:
+    Type: String
+  HostedZoneId:
+    Type: String
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+  GroupIdentifier:
+    Type: String
+  DNSName:
+    Type: String
+  CanonicalHostedZoneID:
+    Type: String
+
+Conditions:
+  CreateRoute53Record: !Not 
+    - !Equals 
+      - !Ref HostName
+      - ''
+
+Resources:
+  Route53RecordSet:
+    Type: AWS::Route53::RecordSet
+    Condition: CreateRoute53Record
+    Properties: 
+      Name: !Ref HostName
+      HostedZoneId: !Ref HostedZoneId
+      Type: A
+      AliasTarget:
+        DNSName: !Ref DNSName 
+        #Fn::ImportValue:
+        #    Fn::Sub: "${Identifier}-${Environment}-LoadBalancerDNS-${GroupIdentifier}"
+        HostedZoneId: !Ref CanonicalHostedZoneID
+        #  Fn::ImportValue:
+        #    Fn::Sub: "${Identifier}-${Environment}-CanonicalHostedZoneID-${GroupIdentifier}"
+
+Outputs:
+  Route53Dns:
+    Condition: CreateRoute53Record
+    Value: !Ref Route53RecordSet

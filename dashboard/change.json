@@ -1,0 +1,1 @@
+{"Changes":[{"Action": "UPSERT","ResourceRecordSet":{"Name": "dashboard.wholebiome.com","Type": "A","TTL": 300,"ResourceRecords":[{"Value":"52.33.96.8"}]}}]}

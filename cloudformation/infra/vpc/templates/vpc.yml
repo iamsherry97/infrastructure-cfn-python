@@ -1,0 +1,266 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  "Template for the creation of new vpc,subnets,igw,nat,route table, routes etc"
+Parameters:
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+  VpcCidrBlock:
+    Description: Cidr Block Range for VPC
+    Type: String
+    Default: 10.0.0.0/16
+  CidrBlockForPubS1:
+    Description: Cidr Block Range for Public Subnet 1
+    Type: String
+    Default: 10.0.1.0/24
+  CidrBlockForPubS2:
+    Description: Cidr Block Range for Public Subnet 2
+    Type: String
+    Default: 10.0.2.0/24
+  CidrBlockForPriS1:
+    Description: Cidr Block Range for Private Subnet 1
+    Type: String
+    Default: 10.0.3.0/24
+  CidrBlockForPriS2:
+    Description: Cidr Block Range for Private Subnet 2
+    Type: String
+    Default: 10.0.4.0/24
+Resources:
+  MyVpc:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !Ref VpcCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-VPC'
+  PublicSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref MyVpc
+      MapPublicIpOnLaunch: True
+      CidrBlock: !Ref CidrBlockForPubS1
+      AvailabilityZone: us-west-2a
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-PublicSubnet1'
+
+  PublicSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref MyVpc
+      MapPublicIpOnLaunch: True
+      CidrBlock: !Ref CidrBlockForPubS2
+      AvailabilityZone: us-west-2b
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-PublicSubnet2'
+
+  PrivateSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref MyVpc
+      MapPublicIpOnLaunch: False
+      CidrBlock: !Ref CidrBlockForPriS1
+      AvailabilityZone: us-west-2a
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-PrivateSubnet1'
+
+  PrivateSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref MyVpc
+      MapPublicIpOnLaunch: False
+      CidrBlock: !Ref CidrBlockForPriS2
+      AvailabilityZone: us-west-2b
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-PrivateSubnet2'
+
+
+
+  MyIGW:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}'
+  MyVpcIGWAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref MyIGW
+      VpcId: !Ref MyVpc
+  MyNATEIP:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-NATIp'
+  MyNatGat:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      AllocationId: !GetAtt MyNATEIP.AllocationId
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-NatGateway'
+  MyPublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-PublicRouteTable'
+  MyPrivateRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-PrivateRouteTable'
+  WWWRouteToIGW:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyIGW
+      RouteTableId: !Ref MyPublicRouteTable
+  PriSubnetToNat:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref MyNatGat
+      RouteTableId: !Ref MyPrivateRouteTable
+
+  PublicSubnet1Asso:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref MyPublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2Asso:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref MyPublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PrivateSubnet1Asso:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref MyPrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2Asso:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref MyPrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+
+
+  SecurityGroup01:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'This is the description of group'
+      GroupName: SgGroupName
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+        - CidrIp: 0.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+        - CidrIp: 0.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+        - CidrIp: 0.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+      SecurityGroupEgress:
+        - CidrIp: 10.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+        - CidrIp: 10.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-SecurityGroup01'
+  SecurityGroup02:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'This is the description of group'
+      GroupName: Sg-02
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+        - CidrIp: 0.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+      SecurityGroupEgress:
+        - CidrIp: 10.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+        - CidrIp: 10.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-SecurityGroup02'
+  SecurityGroup03:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'This is the description of group'
+      GroupName: Sg-03
+      SecurityGroupIngress:
+        - CidrIp: 10.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+      SecurityGroupEgress:
+        - CidrIp: 10.0.0.0/16
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+      VpcId: !Ref MyVpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${Identifier}-${Environment}-SecurityGroup03'
+          
+Outputs:
+  VPC:
+    Description: VPC ID
+    Value: !Ref MyVpc
+  PublicSubnet1:
+    Value: !Ref PublicSubnet1
+  PublicSubnet2:
+    Value: !Ref PublicSubnet2
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+  SecurityGroup01:
+    Description: 'This is the description of group'
+    Value: !Ref SecurityGroup01
+  SecurityGroup02:
+    Description: 'This is the description of group'
+    Value: !Ref SecurityGroup02
+  SecurityGroup03:
+    Description: 'This is the description of group'
+    Value: !Ref SecurityGroup03

@@ -1,0 +1,81 @@
+# Create basic boxer EKS cluster
+create_eks_cluster: _insidecontainer
+    #!/bin/bash
+    set -e
+    eksctl create cluster \
+        --name=boxer-dev1 \
+        --region=us-west-2 \
+        --asg-access \
+        --without-nodegroup \
+        --ssh-access \
+        --ssh-public-key=aws_boxer_batch \
+        --external-dns-access \
+        --auto-kubeconfig  \
+        --full-ecr-access
+    aws eks update-kubeconfig --name=boxer-dev1
+
+kubeconfig: _insidecontainer
+    aws eks update-kubeconfig --name=boxer-dev1
+
+# Run kubectl with params on boxer-dev1
+kubectl +params='--help': _insidecontainer
+    kubectl {{params}}
+
+# Run minikube with params
+minikube +params='start': _insidecontainer
+    minikube {{params}}
+
+# Prints the docker-host IP
+dockerhostip: _insidecontainer
+    @/sbin/ip route | awk '/default/ { print $3 }'
+
+###
+### For use OUTSIDE container:
+###
+# Docker-compose build
+devdown: _outsidecontainer
+    #!/bin/bash
+    set -e
+    docker-compose rm
+
+# Docker-compose up in bg and run bash
+devup: _outsidecontainer
+    #!/bin/bash
+    set -e
+    docker-compose up -d && docker-compose exec boxeradmin bash
+
+# Docker-compose builds
+devbuild: _outsidecontainer
+    #!/bin/bash
+    set -e
+    docker-compose build
+
+##
+## Misc
+##
+
+# Decorator to prevent running outside-container commands within container on accident.
+_outsidecontainer:
+    #!/bin/bash
+    set -e
+    if [ -f /.dockerenv ]; then
+        echo "That command is only for running outside docker!";
+        exit 1
+    fi
+
+# Decorator to prevent running inside-container commands outside on accident.
+_insidecontainer:
+    #!/bin/bash
+    set -e
+    if [ ! -f /.dockerenv ]; then
+        echo "That command is only for running inside docker!";
+        exit 1
+    fi
+
+# Docker-host user id
+curuid:
+    @echo $(id -u):$(id -g)
+
+# Current user homedir path
+curupath:
+    @realpath ~

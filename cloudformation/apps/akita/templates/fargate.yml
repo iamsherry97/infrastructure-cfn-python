@@ -1,0 +1,213 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+  Tag:
+    Type: String
+  ContainerPort:
+    Type: Number
+  Path:
+    Type: String
+    Default: /
+  ServiceName:
+    Type: String
+  Priority:
+    Type: String
+  BucketName:
+    Type: String
+  ImageURI:
+    Type: String
+  DesiredCount:
+    Type: String
+  CPUUnits:
+    Type: String
+    Default: 1024
+  MemoryUnits:
+    Type: String
+    Default: 2048
+  ContainerName:
+    Type: String
+  CertificateARN:
+    Type: String
+  TaskRoleARN:
+    Type: String
+  VPCId:
+    Type: String
+  Subnets:
+    Type: String
+  SecurityGroups:
+    Type: String
+  AppName:
+    Type: String
+  PrivateALBGroupIdentifier:
+    Type: String
+  PublicALBGroupIdentifier:
+    Type: String
+  DataDogParameterStorePath:
+    Type: String
+  DataDogParameterStorePathVersion:
+    Type: String
+
+
+Resources:
+  ELBDefaultListenerPrivate:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn:
+        Fn::ImportValue:
+          Fn::Sub: "${Identifier}-${Environment}-LoadBalancerArn-${PrivateALBGroupIdentifier}"
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: 443
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
+
+  ELBTLSListenerPrivate:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn:
+        Fn::ImportValue:
+          Fn::Sub: "${Identifier}-${Environment}-LoadBalancerArn-${PrivateALBGroupIdentifier}"
+      Certificates:
+        - CertificateArn: !Ref CertificateARN
+      SslPolicy: "ELBSecurityPolicy-2015-05"
+      Port: 443
+      Protocol: HTTPS
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupPrivate
+
+  TargetGroupPrivate:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      TargetType: ip
+      VpcId: !Ref VPCId
+      Port: !Ref ContainerPort
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-399
+      Name: !Sub "${Identifier}-${Environment}-${PrivateALBGroupIdentifier}"
+      HealthCheckPath: !Ref Path
+      HealthCheckProtocol: HTTP
+      HealthCheckIntervalSeconds: 100
+      HealthCheckTimeoutSeconds: 60
+      HealthyThresholdCount: 10
+      UnhealthyThresholdCount: 10
+
+  ELBDefaultListenerPublic:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn:
+        Fn::ImportValue:
+          Fn::Sub: "${Identifier}-${Environment}-LoadBalancerArn-${PublicALBGroupIdentifier}"
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: 443
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
+
+  ELBTLSListenerPublic:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn:
+        Fn::ImportValue:
+          Fn::Sub: "${Identifier}-${Environment}-LoadBalancerArn-${PublicALBGroupIdentifier}"
+      Certificates:
+        - CertificateArn: !Ref CertificateARN
+      SslPolicy: "ELBSecurityPolicy-2015-05"
+      Port: 443
+      Protocol: HTTPS
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupPublic
+
+  TargetGroupPublic:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      TargetType: ip
+      VpcId: !Ref VPCId
+      Port: !Ref ContainerPort
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-399
+      Name: !Sub "${Identifier}-${Environment}-${PublicALBGroupIdentifier}"
+      HealthCheckPath: !Ref Path
+      HealthCheckProtocol: HTTP
+      HealthCheckIntervalSeconds: 100
+      HealthCheckTimeoutSeconds: 60
+      HealthyThresholdCount: 10
+      UnhealthyThresholdCount: 10
+  
+  TaskCloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Identifier}-${Environment}"
+
+  TaskDefinition:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${BucketName}${Environment}/templates/task_definitions/akita.yml"
+      TimeoutInMinutes: '60'
+      Parameters:
+        Environment: !Ref Environment
+        Identifier: !Ref Identifier
+        ServiceName: !Ref ServiceName
+        ContainerPort: !Ref ContainerPort
+        ImageURI: !Ref ImageURI
+        Tag: !Ref Tag
+        CPUUnits: !Ref CPUUnits
+        MemoryUnits: !Ref MemoryUnits
+        TaskRoleARN: !Ref TaskRoleARN
+        DataDogApiKey: !Sub "{{resolve:ssm:${DataDogParameterStorePath}:${DataDogParameterStorePathVersion}}}"
+
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - ELBDefaultListenerPublic
+      - ELBTLSListenerPublic
+      - ELBDefaultListenerPrivate
+      - ELBTLSListenerPrivate
+    Properties:
+      ServiceName: !Sub "${Identifier}-${Environment}"
+      LaunchType: FARGATE
+      Cluster:
+        Fn::ImportValue:
+          Fn::Sub: "${Identifier}-${Environment}-EcsCluster"
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !GetAtt TaskDefinition.Outputs.TaskDefinition
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            Fn::Split:
+              - ","
+              - !Ref SecurityGroups
+          Subnets:
+            Fn::Split:
+              - ","
+              - !Ref Subnets
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      LoadBalancers:
+        - ContainerName: !Ref ContainerName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroupPublic
+        - ContainerName: !Ref ContainerName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroupPrivate  

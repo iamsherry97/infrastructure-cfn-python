@@ -1,0 +1,18 @@
+version: '3'
+services:
+  boxeradmin:
+    build: .
+    stdin_open: true
+    tty: true
+    privileged: true
+    command: /bin/bash
+    volumes:
+      - ~/Desktop/efs:/efs_mirror
+      - ~/.boxer:/root/.boxer
+      - ~/.aws:/root/.aws
+      - ~/.kube:/root/.kube
+      - ~/.helm:/root/.helm
+      - ~/.minikube:/root/.minikube
+      - .:/boxeradmin
+
+    

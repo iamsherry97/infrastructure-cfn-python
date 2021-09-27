@@ -1,0 +1,168 @@
+{
+    "Region_ID": "us-west-2",
+    "Bucket_URI" : "https://dogmatest1.s3.us-west-2.amazonaws.com/",
+    "BucketName": "dogma",
+    "Environment": "prod",
+    "Identifier": "Dogma",
+    "DogmaTaskDefinitionRole":    {
+        "_Priority": 1,
+        "_Path" : "/templates/DogmaTaskDefRole.yml"
+    },    
+    "AkitaTaskDefinitionRole":    {
+        "_Priority": 1,
+        "_Path" : "/templates/AkitaTaskDefRole.yml"
+    },
+    "VPC" : {
+        "_Priority" : 2,
+        "_Path" : "/templates/vpc.yml",
+        "VpcCidrBlock": "10.0.0.0/16", 
+        "CidrBlockForPubS1": "10.0.1.0/24",
+        "CidrBlockForPubS2": "10.0.2.0/24",
+        "CidrBlockForPriS1": "10.0.3.0/24",
+        "CidrBlockForPriS2": "10.0.4.0/24",
+        "_subnets" : [{
+            "ResourceName": "PublicSubnet1",
+            "CidrBlock": "CidrBlockForPubS1",
+            "AvailabilityZone": "us-west-2a",
+            "MapPublicIpOnLaunch": "True",
+            "RouteAssociation": "Public"
+        },
+        {
+            "ResourceName": "PublicSubnet2",
+            "CidrBlock": "CidrBlockForPubS2",
+            "AvailabilityZone": "us-west-2b",
+            "MapPublicIpOnLaunch": "True",
+            "RouteAssociation": "Public"
+        },
+        {
+            "ResourceName": "PrivateSubnet1",
+            "CidrBlock": "CidrBlockForPriS1",
+            "AvailabilityZone": "us-west-2a",
+            "MapPublicIpOnLaunch": "False",
+            "RouteAssociation": "Private"
+        },
+        {
+            "ResourceName": "PrivateSubnet2",
+            "CidrBlock": "CidrBlockForPriS2",
+            "AvailabilityZone": "us-west-2b",
+            "MapPublicIpOnLaunch": "False",
+            "RouteAssociation": "Private"
+    }
+        ],
+
+        "_securitygroup": [{
+            "ResourceName": "SecurityGroup01",
+            "GroupDescription": "This is the description of group",
+            "GroupName": "SgGroupName",
+            "inbound":[
+                {
+                    "CidrIp": "0.0.0.0/16",
+                    "SourceSecurityGroupId": "",
+                    "IpProtocol": "tcp",
+                    "FromPort": "3306",
+                    "ToPort": "3306",
+                    "Description": "'Allow Port'"
+                },
+                {
+                    "CidrIp": "0.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "22",
+                    "ToPort": "22",
+                    "Description": "'Allow Port'"
+                },
+                {
+                    "CidrIp": "0.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "443",
+                    "ToPort": "443",
+                    "Description": "'Allow Port'"
+                },
+                {
+                    "CidrIp": "0.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "80",
+                    "ToPort": "80",
+                    "Description": "'Allow Port'"
+                }
+            ],
+            "outbound":[
+                {
+                    "CidrIp": "10.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "3306",
+                    "ToPort": "3306",
+                    "description": "'Allow Port'"
+                },
+                {
+                    "CidrIp": "10.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "22",
+                    "ToPort": "22",
+                    "description:": "Allow Port"
+                }
+            ]
+            
+        },
+        {
+            "ResourceName": "SecurityGroup02",
+            "GroupDescription": "This is the description of group",
+            "GroupName": "Sg-02",
+            "inbound":[
+                {
+                    "CidrIp": "0.0.0.0/16",
+                    "SourceSecurityGroupId": "" ,
+                    "IpProtocol": "tcp",
+                    "FromPort": "3306",
+                    "ToPort": "3306",
+                    "description": "'Allow Port'"
+                },
+                {
+                    "CidrIp": "0.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "22",
+                    "ToPort": "22",
+                    "description": "'Allow Port'"
+                }
+            ],
+            "outbound":[
+                {
+                    "CidrIp": "10.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "22",
+                    "ToPort": "22",
+                    "description": "'Allow Port'"
+                },
+                {
+                    "CidrIp": "10.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "22",
+                    "ToPort": "22",
+                    "description:": "Allow Port"
+                }
+            ]
+        },
+        {
+            "ResourceName": "SecurityGroup03",
+            "GroupDescription": "This is the description of group",
+            "GroupName": "Sg-03",
+            "inbound":[
+                {
+                    "CidrIp": "10.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "22",
+                    "ToPort": "22",
+                    "description": "'Allow Port'"
+                }],
+            "outbound":[
+                {
+                    "CidrIp": "10.0.0.0/16",
+                    "IpProtocol": "tcp",
+                    "FromPort": "80",
+                    "ToPort": "80",
+                    "description": "'Allow Port'"
+            }]
+        }
+    ]
+    }
+
+}

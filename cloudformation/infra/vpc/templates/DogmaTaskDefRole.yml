@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ECS Task Definition Role
+
+Parameters:
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+    
+Resources:
+  DogmaTaskDefRole: 
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Environment}-DogmaTaskDefinitionRole'
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - 
+          PolicyName: !Sub '${Environment}-DogmaTaskDefinitionPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - ecr:ListImages
+                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/dogma/server
+                Effect: Allow
+              - Action:
+                  - ecr:GetAuthorizationToken
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:GetRepositoryPolicy
+                  - ecr:DescribeRepositories
+                  - ecr:ListImages
+                  - ecr:DescribeImages
+                  - ecr:BatchGetImage
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                  - ecr:PutImage
+                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/dogma/server
+                Effect: Allow
+              - Action: states:*
+                Resource: '*'
+                Effect: Allow
+              - Action: s3:*
+                Resource: arn:aws:s3:::dogmafs/*
+                Effect: Allow
+              - Action: ssm:DescribeParameters
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - ssm:GetParameters
+                  - ssm:GetParametersByPath
+                  - ssm:GetParameter
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/dogma/*
+                Effect: Allow
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: '*'
+                Effect: Allow
+
+Outputs:
+  DogmaTaskDefinitionRole:
+    Description: The name of the Taskdefinition Role.
+    Value: !GetAtt DogmaTaskDefRole.Arn                
+  

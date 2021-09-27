@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "ECS Cluster"
+
+Parameters:
+  Identifier:
+    Type: String
+  Environment:
+    Type: String
+
+Resources:
+  EcsCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${Identifier}-${Environment}"
+      Tags:
+        - Key: Env
+          Value: !Ref Environment
+
+Outputs:
+  EcsCluster:
+    Value: !Ref EcsCluster
+    Export:
+      Name: !Sub "${Identifier}-${Environment}-EcsCluster"

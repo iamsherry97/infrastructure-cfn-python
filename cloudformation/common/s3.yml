@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'AWS Service Operator - Amazon S3 Bucket (aso-1otq2cgce)'
+                  #  Bucket Parameters  #
+Parameters:
+  Environment:
+    Type: String
+  Identifier:
+    Type: String
+  BucketName:
+    Description: >-
+      Must contain only lowercase letters, numbers, periods (.), and hyphens
+      (-),Cannot end in numbers
+    Type: String
+    Default: ${Identifier}-${Environment}-S3bucket
+  LoggingPrefix:
+    Description: >-
+      Must contain only lowercase letters, numbers, periods (.), and hyphens
+      (-),Cannot end in numbers
+    Type: String
+    Default: Archive
+  EnableLogging:
+    Description: enable or discable S3 logging
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+  EnableGlacierLifeCycle:
+    Description: enable archiving to Glacier Storage
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+  GlacierLifeCycleTransitionInDays:
+    Description: Define how many days objects should exist before being moved to Glacier
+    Type: String
+    Default: '0'
+  EnableVersioning:
+    Description: enable versioning
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+  LifeCyclePrefix:
+    Description: >-
+      Must contain only lowercase letters, numbers, periods (.), and hyphens
+      (-),Cannot end in numbers
+    Type: String
+    Default: Archive
+  BucketAccessControl:
+    Description: define if the bucket can be accessed from public or private locations
+    Type: String
+    AllowedValues:
+      - Private
+      - PublicRead
+      - PublicReadWrite
+      - AuthenticatedRead
+      - LogDeliveryWrite
+      - BucketOwnerRead
+      - BucketOwnerFullControl
+      - AwsExecRead
+    Default: "Private"
+  EnableStaticSite:
+    Description: enable static site
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+  BlockPublicAcls:
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'
+  BlockPublicPolicy:
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'     
+  IgnorePublicAcls:
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'   
+  RestrictPublicBuckets:
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'         
+Mappings: {}
+                            #  Template Conditions  #
+Conditions:
+  UseLogging: !Equals
+    - !Ref EnableLogging
+    - 'true'
+  UseGlacierLifeCycle: !Equals
+    - !Ref EnableGlacierLifeCycle
+    - 'true'
+  UseVersioning: !Equals
+    - !Ref EnableVersioning
+    - 'true'
+  UseAsStaticSite: !Equals
+    - !Ref EnableStaticSite
+    - 'true'
+                            #  Template Resources  #
+
+Resources:
+  S3bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref BucketName
+      AccessControl: !Ref BucketAccessControl
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: !Ref BlockPublicAcls
+        BlockPublicPolicy: !Ref BlockPublicPolicy
+        IgnorePublicAcls: !Ref IgnorePublicAcls
+        RestrictPublicBuckets: !Ref RestrictPublicBuckets      
+      LifecycleConfiguration:
+        Rules:
+          - Id: GlacierRule
+            Prefix: !Ref LifeCyclePrefix
+            Status: Enabled
+            ExpirationInDays: '365'
+            Transitions:
+              - TransitionInDays: !Ref GlacierLifeCycleTransitionInDays
+                StorageClass: Glacier
+      VersioningConfiguration: !If
+        - UseVersioning
+        - Status: Enabled
+        - !Ref 'AWS::NoValue'
+    DeletionPolicy: Retain
+
+
+
+Outputs:
+  BucketName:
+    Value: !Ref S3bucket
+    Description: Name of the Amazon S3 bucket.
+  

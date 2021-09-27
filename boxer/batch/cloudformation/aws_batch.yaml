@@ -1,0 +1,56 @@
+Description: Setup Batch Compute Environment
+Parameters:
+  ComputeEnvType:
+    Type: String
+    Default: SPOT
+    AllowedValues:
+      - EC2
+      - SPOT
+  QueueName:
+    Type: String
+    Default: "boxer-dev1"
+  AmiId:
+    Type: String
+    Default: ami-0dd4735c82fe57d35 # AWS ECS 2 AMI with 1Tb root device
+
+Conditions:
+  CreateQueue: !Not [!Equals [ !Ref QueueName, "boxer-dev1" ]]
+
+Resources:
+  JobQueue:
+    Type: AWS::Batch::JobQueue
+    Condition: CreateQueue
+    Properties: 
+      ComputeEnvironmentOrder: 
+        - 
+          ComputeEnvironment: !Ref ComputeEnv
+          Order: 1
+      JobQueueName: !Ref QueueName
+      Priority: 1
+
+  ComputeEnv:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ServiceRole: arn:aws:iam::329245541944:role/service-role/AWSBatchServiceRole
+      Type: MANAGED
+      State: ENABLED
+      ComputeResources:
+        Ec2KeyPair: aws_batch_boxer
+        SecurityGroupIds:
+          - "sg-48149e2f"
+          - "sg-06f996f3d5ac3c6e8"
+          - "sg-0a659065"
+        ImageId: !Ref AmiId
+        InstanceRole: arn:aws:iam::329245541944:instance-profile/aegea.batch.ecs_container_instance
+        InstanceTypes:
+          - m4
+          - r4
+        MinvCpus: 0
+        DesiredvCpus: 0
+        MaxvCpus: 512
+        SpotIamFleetRole: arn:aws:iam::329245541944:role/SpotFleet
+        Subnets:
+          - subnet-b19b15da # us-west-2c. Cannot be different right now as we create EBS volumes only in that region
+        Tags:
+          Name: Boxer
+        Type: !Ref ComputeEnvType
